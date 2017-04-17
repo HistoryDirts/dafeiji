@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>飞机大战1.1</title>
+    <style>
+        .div_bgd {
+            font-family: 微软雅黑;
+            width: 500px;
+            height: 600px;
+            border: 1px solid silver;
+            background-image: url("images/6.png");
+            background-repeat: no-repeat;
+            background-size: 100%;
+            position: absolute;
+            /*left: 30%;*/
+            overflow: hidden;
+        }
+
+        .score {
+            width: 25%;
+            height: 30px;
+            line-height: 30px;
+            background-color: #c4c9ca;
+            color: blue;
+            position: absolute;
+            z-index: -1;
+        }
+
+        .ui_end {
+            font-family: 微软雅黑;
+            position: absolute;
+            width: 200px;
+            height: 160px;
+            /*border: 1px solid silver;*/
+            background-color: #aaaaaa;
+            text-align: center;
+            line-height: 70px;
+            font-size: large;
+            margin-left: 30%;
+            padding: 0;
+            top: -160px;
+            transition: all, 0.5s;
+            z-index: 2;
+            color: rgba(209, 0, 0, 0.89);
+        }
+
+        .ul_end {
+            padding: 0;
+            margin: 0;
+        }
+
+        .ul_end li {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+        }
+
+        .ui_start {
+            /*border: 1px solid blue;*/
+            width: 60%;
+            height: 300px;
+            position: absolute;
+            margin-left: 20%;
+            top: 50%;
+            transition: all 1s;
+        }
+
+        .ul_start {
+            margin-top: 20%;
+        }
+
+        .ul_start li {
+            font-family: 微软雅黑;
+            width: 60%;
+            height: 40px;
+            line-height: 40px;
+            list-style: none;
+            border: 2px solid rgba(12, 12, 12, 0.7);
+            text-align: center;
+            margin-left: 12%;
+            margin-top: 20px;
+        }
+
+        .ui_title {
+            /*border: 1px solid blue;*/
+            width: 100%;
+            height: 40%;
+            position: absolute;
+            transition: all 1s;
+            /*margin-left: 2.5%;*/
+            top: 8%;
+        }
+
+        .aboutme {
+            width: 40%;
+            height: 50%;
+            z-index: 1;
+            /*border: 1px solid red;*/
+            /*margin-left: 30%;*/
+            position: absolute;
+            left: -50%;
+            top: 30%;
+            transition: all 0.6s;
+        }
+
+        .aboutme ul li {
+            list-style: none;
+            height: 50px;
+            line-height: 50px;
+            cursor: pointer;
+        }
+
+        .achev_fifty,.achev_handrid,.achev_thusnd{
+            width: 40%;
+            height: 40px;
+            line-height: 40px;
+            border: 1px solid #bababa;
+            position: absolute;
+            margin-left: 30%;
+            top: -10%;
+            transition: all 0.6s;
+            text-align: center;
+            color: rgba(240, 13, 37, 0.7);
+        }
+    </style>
+</head>
+<body>
+<div class="div_bgd">
+    <div class="score"></div>
+    <div class="ui_end">
+        <ul class="ul_end">
+            <li class="btn_gv">你挂了!</li>
+            <li class="p_score">总分: 0</li>
+            <li style="cursor: pointer;" onclick="again()">不服，再来一把!</li>
+            <li style="cursor: pointer;" onclick="quit()">辣鸡游戏，我不玩了</li>
+        </ul>
+    </div>
+    <div class="ui_title"><img style="width: 100%;height: 100%;" src="images/5.png" alt=""/></div>
+    <div class="ui_start">
+        <ul class="ul_start">
+            <li onclick="start()" style="cursor: pointer;">开始游戏</li>
+            <li onclick="quit()" style="cursor: pointer;">退出游戏</li>
+            <li onclick="info()" style="cursor: pointer;">作者信息</li>
+        </ul>
+    </div>
+    <div class="aboutme">
+        <ul>
+            <li>制作人：吴勇</li>
+            <li>微信：keeway233</li>
+            <li>框架by：TQC</li>
+            <li style="margin-top: 30px;" onclick="back()">返回主界面</li>
+        </ul>
+    </div>
+    <div class="achev_fifty">成就"五十斩"已达成！</div>
+    <div class="achev_handrid">成就"百人斩"已达成！</div>
+    <div class="achev_thusnd">成就"千人斩"已达成！</div>
+</div>
+</body>
+<script>
+    var PERWIDTH = 27;      // 单位宽度
+    var Bullet_ary = new Array();   // 子弹数组
+    var Enemy_ary = new Array();    // 敌机数组
+    var SCORE = 0;          // 分数
+    var timer;         //计时器
+    var div_bgd = document.getElementsByClassName("div_bgd")[0];
+    var score = document.getElementsByClassName("score")[0];
+    var p_score = document.getElementsByClassName("p_score")[0];
+    var ui_end = document.getElementsByClassName("ui_end")[0];
+    var ui_start = document.getElementsByClassName("ui_start")[0];
+    var ui_title = document.getElementsByClassName("ui_title")[0];
+    var aboutme = document.getElementsByClassName("aboutme")[0];
+    var achev_fifty = document.getElementsByClassName("achev_fifty")[0];
+    var achev_handrid = document.getElementsByClassName("achev_handrid")[0];
+    var achev_thusnd = document.getElementsByClassName("achev_thusnd")[0];
+
+    //飞机类（玩家）
+    function Player() {
+        this.width = 80;
+        this.height = 110;
+        this.left = 210;
+        this.top = 480;
+        this.position = "absolute";
+
+        //背景div相关属性
+        var bgd_wth = div_bgd.offsetWidth;
+
+        //玩家飞机创建并显示
+        this.show = function () {
+            if (this.plane == null) {
+                this.plane = document.createElement("div");
+                this.plane.style.width = this.width + "px";
+                this.plane.style.height = this.height + "px";
+                this.plane.style.position = this.position;
+                this.plane.style.backgroundImage = "url('images/3.png')";
+                this.plane.style.backgroundRepeat = "no-repeat";
+                this.plane.style.backgroundSize = "100%";
+                this.plane.style.left = this.left + "px";
+                this.plane.style.top = this.top + "px";
+            }
+            div_bgd.appendChild(this.plane);
+
+        }
+
+        //控制飞机移动
+        this.chgdirect = function (code) {
+            switch (code) {
+                case 37:        //往左移动飞机
+                    this.left = this.left - 1.5 * PERWIDTH;
+                    if (this.left <= 0) {
+                        this.left = 0;
+                    }
+                    this.plane.style.left = this.left + "px";
+                    break;
+                case 38:        //往上移动飞机
+                    this.top = this.top - 1.5 * PERWIDTH;
+                    if (this.left <= 0) {
+                        this.left = 0;
+                    }
+                    this.plane.style.top = this.top + "px";
+                    break;
+                case 39:        //往右移动飞机
+                    this.left = this.left + 1.5 * PERWIDTH;
+                    if (this.left >= (bgd_wth - this.width)) {
+                        this.left = bgd_wth - this.width;
+                    }
+                    this.plane.style.left = this.left + "px";
+                    break;
+                case 40:        //往下移动飞机
+                    this.top = this.top + 1.5 * PERWIDTH;
+                    if (this.left <= 0) {
+                        this.left = 0;
+                    }
+                    this.plane.style.top = this.top + "px";
+                    break;
+                default :
+                    return;
+            }
+        }   //键盘控制飞机移动
+
+
+    }
+
+    //子弹类
+    function Bullet() {
+        this.width = 14;     //子弹大小
+        this.height = 20;
+
+        Bullet_ary = [];
+
+        //创建并显示子弹方法
+        this.show = function () {
+            var plane_x = parseInt(player.plane.style.left);
+            var plane_y = parseInt(player.plane.style.top);
+            this.left = plane_x + this.width * 2.3;
+            this.top = plane_y - this.height - 10;
+            this._bullet = document.createElement("div");
+            this._bullet.style.width = this.width + "px";
+            this._bullet.style.height = this.height + "px";
+            this._bullet.style.backgroundImage = "url('images/4.png')";
+            this._bullet.style.backgroundRepeat = "no-repeat";
+            this._bullet.style.position = "absolute";
+
+
+            //每创建一个子弹，将其及其属性加入子弹数组
+            Bullet_ary.push([this.left, this.top, this._bullet]);
+            this._bullet.style.left = this.left + "px";
+            this._bullet.style.top = this.top + "px";
+
+            div_bgd.appendChild(this._bullet);
+        }
+
+        //子弹移动方法
+        this.move = function () {
+            //判断子弹击中敌机事件
+            for (var i = 0; i < Bullet_ary.length; i++) {
+                for (var j = 0; j < Enemy_ary.length; j++) {
+                    if ((Bullet_ary[i][0] + 0.5 * this.width) <          //判断横向
+                            (Enemy_ary[j][0] + enemy.width) &&
+                            (Bullet_ary[i][0] + 0.5 * this.width) > Enemy_ary[j][0]) {
+                        if (Bullet_ary[i][1] > Enemy_ary[j][1] && Bullet_ary[i][1] <
+                                (Enemy_ary[j][1] + enemy.height)
+                        ) {
+                            //当子弹遇到敌机时，消除子弹和敌机
+                            Enemy_ary[j][2].parentNode.removeChild(Enemy_ary[j][2]);
+                            Enemy_ary.splice(j, 1);
+                            SCORE++;
+                            console.log(SCORE);
+                            Bullet_ary[i][2].parentNode.removeChild(Bullet_ary[i][2]);
+//                            for(var n = 0; n < i; n ++){
+//                                Bullet_ary.splice(n,1);
+//                            }
+                            Bullet_ary.splice(i, 1);
+                            this.move();
+                            break;
+
+                        }
+                    }
+                }
+            }
+
+            for (var i = 0; i < Bullet_ary.length; i++) {
+                if (Bullet_ary[i][1] > 100) {
+                    Bullet_ary[i][1] -= PERWIDTH;
+                    Bullet_ary[i][2].style.top = Bullet_ary[i][1] + "px";
+                }
+                else {
+                    Bullet_ary[0][2].parentNode.removeChild(Bullet_ary[0][2]);
+                    Bullet_ary.shift();
+//                    this.move();
+//                    break;
+                }
+            }
+        }
+    }
+
+    //敌机类
+    function Enemy() {
+        this.width = 50;
+        this.height = 35;
+        this.position = "absolute";
+        this.img = "url('images/2.png')";
+
+        Enemy_ary = [];
+
+        //敌机显示
+        this.show = function () {
+            if (Enemy_ary.length < 15) {
+                //敌机div样式
+                this.e_plane = document.createElement("div");
+                this.e_plane.style.width = this.width + "px";
+                this.e_plane.style.height = this.height + "px";
+                this.e_plane.style.backgroundImage = this.img;
+                this.e_plane.style.backgroundRepeat = "no-repeat";
+                this.e_plane.style.position = "absolute";
+                this.e_plane.style.backgroundSize = "100%";
+                this.left = Math.floor(Math.random() * 10) * this.width;
+                this.top = Math.floor(Math.random() * 4) * this.height;
+                this.e_plane.style.left = this.left + "px";
+                this.e_plane.style.top = this.top + "px";
+
+                //将敌机及其位置属性存入数组,并显示
+                Enemy_ary.push([this.left, this.top, this.e_plane]);
+                div_bgd.appendChild(this.e_plane);
+            }
+
+        }
+
+        //敌机移动
+        this.move = function () {
+            var plane_x = parseInt(player.plane.style.left);
+            var plane_y = parseInt(player.plane.style.top);
+            for (var i = 0; i < Enemy_ary.length; i++) {
+                //判断飞机是否遇到玩家
+                if (plane_x >= Enemy_ary[i][0] &&
+                        plane_x <= (Enemy_ary[i][0] + 0.7 * enemy.width)) {
+                    if (plane_y <= (Enemy_ary[i][1] + 0.7 * enemy.height)) {
+                        clearInterval(timer);
+                        p_score.innerHTML = "总分: " + 10 * SCORE;
+                        ui_end.style.top = 40 + "px";
+                        div_bgd.removeChild(player.plane);
+                    }
+                }
+
+                //敌机移动
+                if (Enemy_ary[i][1] < 550) {
+                    //敌机随机移动速度
+//                    v = Math.floor(Math.random() * 10);
+                    Enemy_ary[i][1] = Enemy_ary[i][1] + 5;
+                    Enemy_ary[i][2].style.top = Enemy_ary[i][1] + "px";
+                }
+                else {
+                    Enemy_ary[i][2].parentNode.removeChild(Enemy_ary[i][2]);
+                    Enemy_ary.splice(i, 1);
+                }
+            }
+        }
+    }
+
+    //初始化
+    function Init() {
+        enemy = new Enemy();
+
+        player = new Player();
+        player.show();
+        bullet = new Bullet();
+    }
+
+    function PlaneMove(){
+        div_bgd.onmousemove = function (e) {
+            var width = player.width;
+            var height = player.height;
+            var m_x = e.pageX;    //当前鼠标相对窗口X坐标
+            var m_y = e.pageY;
+
+            player.plane.style.left = m_x - (width / 2) + "px";
+            player.plane.style.top = m_y - (height / 2) + "px";
+        }
+    }
+
+    //成就事件
+    function Achev(){
+        if (SCORE == 50) {
+            achev_fifty.style.top = "10px";
+            setTimeout(function () {
+                achev_fifty.style.top = "-10%";
+            }, 2500)
+        }
+        if (SCORE == 100) {
+            achev_handrid.style.top = "10px";
+            setTimeout(function () {
+                achev_handrid.style.top = "-10%";
+            }, 2500)
+        }
+        if (SCORE == 1000) {
+            achev_thusnd.style.top = "10px";
+            setTimeout(function () {
+                achev_thusnd.style.top = "-10%";
+            }, 2500)
+        }
+    }
+
+    //游戏结束清理事件
+    function remove(){
+
+    }
+    //每帧画面处理事件
+    function onframe() {
+        enemy.move();
+        enemy.show();
+        PlaneMove();
+        bullet.move();
+        bullet.show();
+
+        score.innerHTML = "当前分数：" + 10 * SCORE;
+        Achev();
+    }
+
+    //再来一把
+    function again() {
+//        ui_end.style.display = "none";
+//        Init();
+//        timer = setInterval("onframe()",40);
+        window.location.reload();
+    }
+
+    //开始游戏
+    function start() {
+        ui_start.style.top = 600 + "px";   //主界面移开
+        ui_title.style.top = -500 + "px";
+        score.style.zIndex = "2";
+        Init();             //执行初始化事件
+        timer = setInterval("onframe()", 40); //计时器开始运行
+    }
+
+    //退出游戏
+    function quit() {
+        window.close();
+    }
+
+    //作者信息
+    function info() {
+        ui_start.style.top = 600 + "px";
+        ui_title.style.top = -500 + "px";
+        aboutme.style.left = "30%";
+    }
+
+    //返回主界面
+    function back() {
+        aboutme.style.left = "-50%";
+        ui_start.style.top = "50%";
+        ui_title.style.top = "10%";
+    }
+
+    //窗口加载
+    window.onload = function () {
+        //监听键盘按键事件
+        document.onkeydown = function () {
+            var code;
+            if (window.event) {
+                code = window.event.keyCode;
+            }
+            else {
+                code = event.keyCode;
+            }
+            player.chgdirect(code);
+        }
+    }
+</script>
+</html>
